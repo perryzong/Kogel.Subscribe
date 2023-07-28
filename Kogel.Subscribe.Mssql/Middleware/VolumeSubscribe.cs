@@ -52,9 +52,9 @@ namespace Kogel.Subscribe.Mssql.Middleware
     /// </summary>
     public class VolumeFile<T> : IDisposable
     {
-        private readonly string _path;
+        private string _path;
 
-        private readonly ObjectLock @lock;
+        private static readonly object obj = new object();
 
         private readonly SubscribeContext<T> _context;
 
@@ -69,7 +69,6 @@ namespace Kogel.Subscribe.Mssql.Middleware
                 {
                     Directory.CreateDirectory(directoryFullName);
                 }
-                @lock = ObjectLock.CreateOrGet(_path);
             }
         }
 
@@ -126,8 +125,15 @@ namespace Kogel.Subscribe.Mssql.Middleware
         /// <param name="context"></param>
         public void WriteSeqval(string seqval)
         {
-            lock (@lock)
+            string _newpath = $"{Directory.GetCurrentDirectory()}//volumes//{DateTime.Now.ToString("yyyyMMdd")}_{_context.TableName}.txt";
+            lock (obj)
             {
+                if (_newpath != _path)
+                {
+                    _path = _newpath;
+                    _streamWriter.Close();
+                    _streamWriter = null;
+                }
                 if (_streamWriter is null)
                 {
                     _streamWriter = File.Exists(_path) ? new StreamWriter(GetFileStream(_path, true)) : File.CreateText(_path);
