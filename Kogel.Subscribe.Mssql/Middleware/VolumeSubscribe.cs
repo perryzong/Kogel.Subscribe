@@ -54,6 +54,7 @@ namespace Kogel.Subscribe.Mssql.Middleware
     {
         private string _path;
 
+
         private static readonly object obj = new object();
 
         private readonly SubscribeContext<T> _context;
